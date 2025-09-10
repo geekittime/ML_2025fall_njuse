@@ -44,6 +44,10 @@ merged_df = merged_df[merged_df['TTC_hours'] <= 1000]
 # 对目标变量进行log1p变换，以处理其长尾分布
 merged_df['log_TTC_hours'] = np.log1p(merged_df['TTC_hours'])
 
+# 同样对特征中的时长取log1p
+merged_df['log_last_pr_update'] = np.log1p(merged_df['last_pr_update'])
+merged_df['log_last_comment_update'] = np.log1p(merged_df['last_comment_update'])
+
 # 将布尔列转换为数字0或1
 for bool_col in merged_df.select_dtypes(include=bool).columns.tolist():
     merged_df[bool_col] = merged_df[bool_col].astype(int)
