@@ -95,7 +95,7 @@ print("特征标准化完成。")
 # --- 4. 模型训练 ---
 print("\n步骤 4: 开始训练随机森林回归模型...")
 
-model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1, oob_score=True)
+model = RandomForestRegressor(n_estimators=100, random_state=42, oob_score=True)
 # 使用标准化后的数据进行训练
 model.fit(X_train, y_train)
 

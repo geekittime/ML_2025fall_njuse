@@ -72,7 +72,7 @@ print("\n步骤 4: 开始训练随机森林分类模型...")
 
 # --- 修改点：使用随机森林分类器 ---
 # class_weight='balanced' 可以帮助处理数据不平衡问题（如果合入与未合入的PR数量差异很大）
-model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1, class_weight='balanced')
+model = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')
 model.fit(X_train, y_train)
 print("模型训练完成。")
 
