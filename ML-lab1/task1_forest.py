@@ -20,29 +20,8 @@ path_prefix = os.path.join(script_dir, 'yii2')
 
 print(f"正在从以下路径加载数据: {path_prefix}")
 
-pr_info_path = os.path.join(path_prefix, 'PR_info.xlsx')
-pr_features_path = os.path.join(path_prefix, 'PR_features.xlsx')
-author_features_path = os.path.join(path_prefix, 'author_features.xlsx')
-pr_info_add_conversation_path = os.path.join(path_prefix, 'PR_info_add_conversation.xlsx')
-
-pr_info = pd.read_excel(pr_info_path)
-pr_features = pd.read_excel(pr_features_path)
-author_features = pd.read_excel(author_features_path)
-pr_info_add_conversation = pd.read_excel(pr_info_add_conversation_path)
-
-# --- 【最终修正】: 根据截图修正合并键 ---
-# pr_info 中使用 'pr_number'，pr_features 中使用 'number'
-merged_df = pd.merge(pr_info, pr_features, left_on='number', right_on='number', how='left')
-
-# author_features 中使用 'author_name'，与 merged_df 中的 'author_name' 匹配，无需修改
-merged_df = pd.merge(merged_df, author_features, left_on='number', right_on='number', how='left')
-
-merged_df = pd.merge(merged_df, pr_info_add_conversation, left_on='number', right_on='number', how='left')
-
-# 清理合并后产生的冗余列和无用列
-# errors='ignore' 可以防止当列不存在时报错
-columns_to_drop = ['Unnamed: 0_x', 'Unnamed: 0_y']
-merged_df.drop(columns=columns_to_drop, inplace=True, errors='ignore')
+extracted_path = os.path.join(path_prefix, 'PR_extracted_features.xlsx')
+merged_df = pd.read_excel(extracted_path)
 
 print(f"数据合并完成。数据集共有 {merged_df.shape[0]} 行和 {merged_df.shape[1]} 列。")
 print("合并后数据预览:\n", merged_df.head())
@@ -51,7 +30,7 @@ print("合并后数据预览:\n", merged_df.head())
 print("\n步骤 2: 开始数据预处理和特征工程...")
 
 # 转换时间列为datetime对象
-merged_df['created_at'] = pd.to_datetime(merged_df['created_at_x'])
+merged_df['created_at'] = pd.to_datetime(merged_df['created_at'])
 # merged_df['closed_at'] = pd.to_datetime(merged_df['closed_at'])
 merged_df['closed_at'] = pd.to_datetime(merged_df['closed_at'])
 # 计算目标变量 TTC (Time-to-Close)，单位为小时
@@ -65,16 +44,16 @@ merged_df = merged_df[merged_df['TTC_hours'] <= 1000]
 # 对目标变量进行log1p变换，以处理其长尾分布
 merged_df['log_TTC_hours'] = np.log1p(merged_df['TTC_hours'])
 
+# 将布尔列转换为数字0或1
+for bool_col in merged_df.select_dtypes(include=bool).columns.tolist():
+    merged_df[bool_col] = merged_df[bool_col].astype(int)
+
 # 选择用于训练的特征列
 features = merged_df.select_dtypes(include=np.number).columns.tolist()
 
 # 从特征列表中移除目标变量和ID等非特征列
-features_to_remove = ['number', 'author_id', 'project_id', 'TTC_hours', 'log_TTC_hours']
+features_to_remove = ['number', 'TTC_hours', 'log_TTC_hours']
 features = [f for f in features if f not in features_to_remove]
-
-# 检查并移除可能存在的 'Unnamed: 0' 列
-if 'Unnamed: 0' in features:
-    features.remove('Unnamed: 0')
 
 X = merged_df[features]
 y = merged_df['log_TTC_hours']
@@ -119,13 +98,6 @@ print("\n步骤 4: 开始训练随机森林回归模型...")
 model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1, oob_score=True)
 # 使用标准化后的数据进行训练
 model.fit(X_train, y_train)
-
-print("模型训练完成。")
-# # --- 4. 模型训练 ---
-# print("\n步骤 4: 开始训练随机森林回归模型...")
-#
-# model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1, oob_score=True)
-# model.fit(X_train, y_train)
 
 print("模型训练完成。")
 
