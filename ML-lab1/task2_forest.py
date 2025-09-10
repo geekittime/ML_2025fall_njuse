@@ -19,45 +19,19 @@ path_prefix = os.path.join(script_dir, 'yii2')
 
 print(f"正在从以下路径加载数据: {path_prefix}")
 
-pr_info_path = os.path.join(path_prefix, 'PR_info.xlsx')
-pr_features_path = os.path.join(path_prefix, 'PR_features.xlsx')
-author_features_path = os.path.join(path_prefix, 'author_features.xlsx')
-pr_info_add_conversation_path = os.path.join(path_prefix, 'PR_info_add_conversation.xlsx')
-
-pr_info = pd.read_excel(pr_info_path)
-pr_features = pd.read_excel(pr_features_path)
-author_features = pd.read_excel(author_features_path)
-pr_info_add_conversation = pd.read_excel(pr_info_add_conversation_path)
-
-# !!! 警告：遵照你的要求，下面的 author_features 合并方式是保留的。
-# !!! 这种按'number'的合并方式是错误的，会导致作者特征被污染，严重影响模型性能和系数分析的准确性。
-merged_df = pd.merge(pr_info, pr_features, on='number', how='left')
-merged_df = pd.merge(merged_df, author_features, on='number', how='left')
-merged_df = pd.merge(merged_df, pr_info_add_conversation, on='number', how='left')
-
-# 处理合并产生的同名列
-if 'created_at_y' in merged_df.columns:
-    merged_df.drop(columns=['created_at_y'], inplace=True)
-if 'created_at_x' in merged_df.columns:
-    merged_df.rename(columns={'created_at_x': 'created_at'}, inplace=True)
-
-# 清理无用的索引列
-columns_to_drop = [col for col in merged_df.columns if 'Unnamed: 0' in str(col)]
-merged_df.drop(columns=columns_to_drop, inplace=True, errors='ignore')
+extracted_path = os.path.join(path_prefix, 'PR_extracted_features.xlsx')
+merged_df = pd.read_excel(extracted_path)
 
 print(f"数据合并完成。数据集共有 {merged_df.shape[0]} 行和 {merged_df.shape[1]} 列。")
 
 # --- 2. 数据预处理与特征工程 ---
 print("\n步骤 2: 开始数据预处理和特征工程...")
 
-# --- 修改点：为分类任务进行预处理 ---
-# 1. 筛选出已关闭的PR，这是我们关心的数据范围
-# merged_df = merged_df[merged_df['state'] == 'closed']
-print(f"筛选出 state 为 'closed' 的PR后，剩余 {len(merged_df)} 行。")
-
 # 2. 定义目标变量 y
-# 将布尔值 (True/False) 转换为整数 (1/0)
-y = merged_df['merged_x'].astype(int)
+# 将布尔列转换为数字0或1
+for bool_col in merged_df.select_dtypes(include=bool).columns.tolist():
+    merged_df[bool_col] = merged_df[bool_col].astype(int)
+y = merged_df['merged']
 
 # 3. 定义特征 X
 # 转换时间列，仅用于后续排序
@@ -68,7 +42,7 @@ features = merged_df.select_dtypes(include=np.number).columns.tolist()
 
 # 从特征列表中移除ID和目标变量本身
 # 注意：'merged'列本身不能作为特征来预测自己
-features_to_remove = ['number', 'author_id', 'project_id', 'merged']
+features_to_remove = ['number', 'merged']
 features = [f for f in features if f not in features_to_remove]
 
 X = merged_df[features]
