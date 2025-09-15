@@ -14,9 +14,10 @@ warnings.filterwarnings('ignore')
 print("步骤 1: 开始加载和合并数据...")
 
 # 使用脚本的绝对路径，使其不受运行位置影响
+project_name = input("使用的项目目录：")
 script_path = os.path.abspath(__file__)
 script_dir = os.path.dirname(script_path)
-path_prefix = os.path.join(script_dir, 'yii2')
+path_prefix = os.path.join(script_dir, project_name)
 
 print(f"正在从以下路径加载数据: {path_prefix}")
 
