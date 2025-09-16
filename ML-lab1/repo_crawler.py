@@ -240,6 +240,7 @@ def parse_args():
     p.add_argument('--max-prs', type=int, help='限定最多抓取多少个 PR (按最新)')
     p.add_argument('--limit-contrib', type=int, help='限定贡献者数量 (可选)')
     p.add_argument('-o', '--out-dir', default='output', help='输出目录')
+    p.add_argument('--skip-list', action='store_true', help='跳过 PR 列表获取')
     p.add_argument('--skip-details', action='store_true', help='跳过 PR 详情')
     p.add_argument('--skip-files', action='store_true', help='跳过 PR 修改文件')
     p.add_argument('--skip-reviews', action='store_true', help='跳过 PR 审核评论')
@@ -260,15 +261,16 @@ def main():
     with requests.Session() as session:
         session.headers.update(auth_headers(token))
 
-        LOGGER.info('开始抓取 PR 列表')
-        # pr_list_rows = fetch_pr_list(session, args.owner, args.repo, args.state, args.max_prs)
-        # write_csv(os.path.join(args.out_dir, 'pr_list.csv'), pr_list_rows)
+        if not args.skip_list:
+            LOGGER.info('开始抓取 PR 列表')
+            pr_list_rows = fetch_pr_list(session, args.owner, args.repo, args.state, args.max_prs)
+            write_csv(os.path.join(args.out_dir, 'pr_list.csv'), pr_list_rows)
 
         with open(os.path.join(args.out_dir, 'pr_list.csv'), 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             pr_list_rows = [row for row in reader]
 
-        pr_numbers = [r['number'] for r in pr_list_rows[:2000]]
+        pr_numbers = [r['number'] for r in pr_list_rows]
         print(f"Total pr_numbers: {len(pr_numbers)}")
         if not pr_numbers:
             LOGGER.info('无 PR 数据，结束。')
