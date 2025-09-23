@@ -14,11 +14,11 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 
-# --- 设置随机种子以保证结果可复现 ---
-torch.manual_seed(42)
-np.random.seed(42)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(42)
+
+# torch.manual_seed(42)
+# np.random.seed(42)
+# if torch.cuda.is_available():
+#     torch.cuda.manual_seed_all(42)
 
 # 忽略一些未来版本的警告
 warnings.filterwarnings('ignore')
@@ -64,7 +64,7 @@ class MultiTaskWideAndDeep(nn.Module):
         return classification_output, regression_output
 
 
-# --- 修改点：基于您的原始函数改造，用于准备多任务数据 ---
+
 def prepare_multi_task_data(project_name="yii2"):
     """加载和预处理数据，为两个任务返回标签"""
     print("步骤 1: 开始加载和合并数据...")
@@ -76,15 +76,18 @@ def prepare_multi_task_data(project_name="yii2"):
 
     extracted_path = os.path.join(path_prefix, 'PR_extracted_features.xlsx')
     merged_df = pd.read_excel(extracted_path)
+
     print(f"数据加载完成。数据集共有 {merged_df.shape[0]} 行和 {merged_df.shape[1]} 列。")
 
     print("\n步骤 2: 开始为多任务进行数据预处理和特征工程...")
-    # --- 以下特征工程逻辑，完全遵照您的原始代码 ---
+
     for bool_col in merged_df.select_dtypes(include=bool).columns.tolist():
         merged_df[bool_col] = merged_df[bool_col].astype(int)
+
+    merged_df['TTC_hours'] = (merged_df['closed_at'] - merged_df['created_at']).dt.total_seconds() / 3600
+    merged_df = merged_df[merged_df['TTC_hours'] <= 1000]
     merged_df['created_at'] = pd.to_datetime(merged_df['created_at'])
     merged_df['closed_at'] = pd.to_datetime(merged_df['closed_at'])
-    merged_df['TTC_hours'] = (merged_df['closed_at'] - merged_df['created_at']).dt.total_seconds() / 3600
     merged_df.dropna(subset=['closed_at', 'created_at'], inplace=True)
     merged_df = merged_df[(merged_df['TTC_hours'] >= 0) & (merged_df['TTC_hours'] <= 1000)]
     merged_df['log_TTC_hours'] = np.log1p(merged_df['TTC_hours'])
@@ -218,6 +221,8 @@ def eval_multi_task_model(model, X_test_scaled, y_test_class, y_test_reg, device
         pred_class_probs, pred_reg_values = model(X_test_tensor)
         pred_class_labels = (pred_class_probs.cpu().numpy().flatten() > 0.5).astype(int)
         pred_reg_values = pred_reg_values.cpu().numpy().flatten()
+        pred_ttc_hours = np.expm1(pred_reg_values)
+        y_test_hours=np.expm1(y_test_reg)
 
     print("\n\n=============== 任务一：PR合并预测 (分类) 评估 ================")
     print("\n--- 混淆矩阵 ---")
@@ -226,8 +231,8 @@ def eval_multi_task_model(model, X_test_scaled, y_test_class, y_test_reg, device
     print(classification_report(y_test_class, pred_class_labels, target_names=['Not Merged (0)', 'Merged (1)']))
 
     print("\n\n========== 任务二：PR关闭时间预测 (回归) 评估 ==========")
-    print(f"均方误差 (MSE): {mean_squared_error(y_test_reg, pred_reg_values):.4f}")
-    print(f"平均绝对误差 (MAE): {mean_absolute_error(y_test_reg, pred_reg_values):.4f}")
+    print(f"均方误差 (MSE): {mean_squared_error(pred_ttc_hours, y_test_hours):.4f}")
+    print(f"平均绝对误差 (MAE): {mean_absolute_error(y_test_hours, pred_ttc_hours):.4f}")
     print("---------------------------------------------------------")
 
 
