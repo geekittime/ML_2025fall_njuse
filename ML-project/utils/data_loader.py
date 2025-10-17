@@ -76,7 +76,7 @@ def prepare_features(
     features_to_remove: List[str] = None,
     apply_log_transform: bool = True,
     max_ttc_hours: Optional[float] = 1000
-) -> Tuple[pd.DataFrame, pd.Series, List[str]]:
+) -> Tuple[pd.DataFrame, pd.Series, List[str], pd.DataFrame]:
     """
     Prepare features for machine learning models
     
@@ -89,7 +89,7 @@ def prepare_features(
         max_ttc_hours: Maximum TTC hours to filter outliers (None to disable)
     
     Returns:
-        Tuple of (X features DataFrame, y target Series, feature names list)
+        Tuple of (X features DataFrame, y target Series, feature names list, filtered df)
     """
     df = df.copy()
     
@@ -159,7 +159,8 @@ def prepare_features(
     print(f"Prepared {len(features)} features for {task} task")
     print(f"Target variable: {target_col}, shape: {y.shape}")
     
-    return X, y, features
+    # Return filtered df as well to ensure index alignment
+    return X, y, features, df
 
 
 def train_test_split_by_time(
@@ -208,14 +209,14 @@ if __name__ == "__main__":
     
     print("\n" + "="*50)
     print("Testing regression task preparation:")
-    X, y, features = prepare_features(df, task="regression")
+    X, y, features, df_filtered = prepare_features(df, task="regression")
     print(f"X shape: {X.shape}")
     print(f"y shape: {y.shape}")
     print(f"Features: {features[:5]}...")
     
     print("\n" + "="*50)
     print("Testing classification task preparation:")
-    X, y, features = prepare_features(df, task="classification")
+    X, y, features, df_filtered = prepare_features(df, task="classification")
     print(f"X shape: {X.shape}")
     print(f"y shape: {y.shape}")
     print(f"Class distribution:\n{y.value_counts()}")

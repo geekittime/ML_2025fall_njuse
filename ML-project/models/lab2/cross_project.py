@@ -57,14 +57,14 @@ class CrossProjectExperiment:
         test_df = load_and_merge_data(test_path, use_extracted=True)
         
         # 3. Prepare features
-        X_train, y_train, train_features = prepare_features(
+        X_train, y_train, train_features, _ = prepare_features(
             train_df,
             task=self.task,
             apply_log_transform=(self.task == "regression"),
             max_ttc_hours=1000 if self.task == "regression" else None
         )
         
-        X_test, y_test, test_features = prepare_features(
+        X_test, y_test, test_features, _ = prepare_features(
             test_df,
             task=self.task,
             apply_log_transform=(self.task == "regression"),

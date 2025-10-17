@@ -135,7 +135,7 @@ def main(model_type="mlp", dataset_name="yii2", use_extracted=True):
     df = load_and_merge_data(data_path, use_extracted=use_extracted)
     
     # 2. Prepare features for classification
-    X, y, features = prepare_features(
+    X, y, features, df_filtered = prepare_features(
         df,
         task="classification",
         target_col="merged"
@@ -143,7 +143,7 @@ def main(model_type="mlp", dataset_name="yii2", use_extracted=True):
     
     # 3. Split data by time
     X_train, X_test, y_train, y_test = train_test_split_by_time(
-        X, y, df, split_ratio=TRAIN_SPLIT_RATIO
+        X, y, df_filtered, split_ratio=TRAIN_SPLIT_RATIO
     )
     
     # 4. Initialize model
