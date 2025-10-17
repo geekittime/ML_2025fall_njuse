@@ -26,6 +26,7 @@ def run_lab1_model(model_type: str, task: int, dataset: str):
         task: Task number (1 or 2)
         dataset: Dataset name
     """
+    return
     if task == 1:
         # Task 1: Regression - Predicting PR Time-to-Close
         if model_type == "linear":
@@ -65,47 +66,31 @@ def run_lab2_model(model_type: str, task: int, dataset: str, use_extracted: bool
     Run a Lab2 (deep learning) model
     
     Args:
-        model_type: Type of model ('mlp', 'wide_deep', 'deepcross', 'multitask')
-        task: Task number (1 or 2)
+        model_type: Type of model ('mlp', 'wide_deep', 'deep_cross', 'shared_bottom', 'mmoe', 'multitask')
+        task: Task number (1, 2, or 'multitask')
         dataset: Dataset name
         use_extracted: Whether to use pre-extracted features
     """
     if task == 1:
         # Task 1: Regression - Predicting PR Time-to-Close
-        if model_type == "mlp":
-            from models.lab2.task1_Linear_refactored import main
-            print(f"\nRunning Lab2 Task1: MLP on {dataset}")
-            return main(dataset, use_extracted)
-        elif model_type == "wide_deep":
-            print("Wide&Deep not yet refactored. Please refactor task1_Wide&Deep.py")
-            # from models.lab2.task1_widedeep_refactored import main
-            # return main(dataset, use_extracted)
-        elif model_type == "deepcross":
-            print("DeepCross not yet refactored. Please refactor task1_deepcross.py")
-            # from models.lab2.task1_deepcross_refactored import main
-            # return main(dataset, use_extracted)
-        else:
-            raise ValueError(f"Unknown Lab2 Task1 model: {model_type}")
+        from models.lab2.task1 import main
+        print(f"\nRunning Lab2 Task1: {model_type.upper()} on {dataset}")
+        return main(model_type, dataset, use_extracted)
     
     elif task == 2:
         # Task 2: Classification - Predicting PR Merge Status
-        if model_type == "mlp":
-            print("MLP classification not yet refactored. Please refactor task2_MLP.py")
-            # from models.lab2.task2_mlp_refactored import main
-            # return main(dataset, use_extracted)
-        elif model_type == "wide_deep":
-            print("Wide&Deep classification not yet refactored. Please refactor task2_widedeep.py")
-            # from models.lab2.task2_widedeep_refactored import main
-            # return main(dataset, use_extracted)
-        elif model_type == "deepcross":
-            print("DeepCross classification not yet refactored. Please refactor task2_deepcross.py")
-            # from models.lab2.task2_deepcross_refactored import main
-            # return main(dataset, use_extracted)
-        else:
-            raise ValueError(f"Unknown Lab2 Task2 model: {model_type}")
+        from models.lab2.task2 import main
+        print(f"\nRunning Lab2 Task2: {model_type.upper()} on {dataset}")
+        return main(model_type, dataset, use_extracted)
+    
+    elif task == "multitask" or model_type == "multitask":
+        # Multi-Task Learning
+        from models.lab2.multitask import main
+        print(f"\nRunning Lab2 Multi-Task Learning on {dataset}")
+        return main(dataset)
     
     else:
-        raise ValueError(f"Unknown task number: {task}. Must be 1 or 2")
+        raise ValueError(f"Unknown task: {task}. Must be 1, 2, or 'multitask'")
 
 
 def main():
@@ -115,17 +100,24 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run Lab1 Linear Regression on yii2 dataset
+  # Lab1: Classical Machine Learning
   python main.py --lab 1 --model linear --task 1 --dataset yii2
-  
-  # Run Lab1 Logistic Regression on django dataset
   python main.py --lab 1 --model logistic --task 2 --dataset django
   
-  # Run Lab2 MLP on yii2 dataset
+  # Lab2 Task1: Regression (PR Time-to-Close Prediction)
   python main.py --lab 2 --model mlp --task 1 --dataset yii2
+  python main.py --lab 2 --model wide_deep --task 1 --dataset tensorflow
+  python main.py --lab 2 --model deep_cross --task 1 --dataset django
+  python main.py --lab 2 --model shared_bottom --task 1 --dataset yii2
+  python main.py --lab 2 --model mmoe --task 1 --dataset yii2
   
-  # Run Lab2 DeepCross on tensorflow dataset
-  python main.py --lab 2 --model deepcross --task 1 --dataset tensorflow
+  # Lab2 Task2: Classification (PR Merge Prediction)
+  python main.py --lab 2 --model mlp --task 2 --dataset yii2
+  python main.py --lab 2 --model wide_deep --task 2 --dataset django
+  python main.py --lab 2 --model deep_cross --task 2 --dataset tensorflow
+  
+  # Lab2: Multi-Task Learning (both tasks together)
+  python main.py --lab 2 --model multitask --task 1 --dataset yii2
         """
     )
     
@@ -141,7 +133,7 @@ Examples:
         "--model",
         type=str,
         required=True,
-        help="Model type. Lab1: linear, polynomial, random_forest, logistic. Lab2: mlp, wide_deep, deepcross, multitask"
+        help="Model type. Lab1: linear, polynomial, random_forest, logistic. Lab2: mlp, wide_deep, deep_cross, shared_bottom, mmoe, multitask"
     )
     
     parser.add_argument(
@@ -149,7 +141,7 @@ Examples:
         type=int,
         required=True,
         choices=[1, 2],
-        help="Task number: 1 (Regression) or 2 (Classification)"
+        help="Task number: 1 (Regression - TTC Prediction) or 2 (Classification - Merge Prediction)"
     )
     
     parser.add_argument(

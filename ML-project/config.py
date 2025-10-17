@@ -94,31 +94,77 @@ LAB2_CONFIG = {
         "device": "auto",  # "auto", "cuda", or "cpu"
     },
     
-    # Linear Model (MLP)
-    "linear_mlp": {
-        "hidden_layers": [128, 64, 32],
-        "dropout_rate": 0.2,
+    # Task 1: Regression models
+    "task1": {
+        # MLP Regressor
+        "mlp": {
+            "hidden_layers": [128, 64, 32],
+            "dropout_rate": 0.2,
+        },
+        
+        # Wide & Deep Regressor
+        "wide_deep": {
+            "deep_dims": [128, 64],
+            "dropout_rate": 0.2,
+        },
+        
+        # Deep & Cross Regressor
+        "deep_cross": {
+            "num_cross_layers": 3,
+            "deep_dims": [128, 64],
+            "dropout_rate": 0.2,
+        },
+        
+        # Shared-Bottom (can be used for single task)
+        "shared_bottom": {
+            "shared_dims": [128, 64],
+            "task_dims": [32],
+            "num_tasks": 1,
+            "dropout_rate": 0.2,
+        },
+        
+        # MMoE (can be used for single task)
+        "mmoe": {
+            "num_experts": 3,
+            "expert_dims": [64, 32],
+            "task_dims": [32],
+            "num_tasks": 1,
+            "dropout_rate": 0.2,
+        },
     },
     
-    # Wide & Deep Model
-    "wide_deep": {
-        "wide_dim": None,  # Will be set based on features
-        "deep_hidden_layers": [128, 64],
-        "dropout_rate": 0.2,
+    # Task 2: Classification models
+    "task2": {
+        # MLP Classifier
+        "mlp": {
+            "hidden_layers": [128, 64, 32],
+            "dropout_rate": 0.2,
+        },
+        
+        # Wide & Deep Classifier
+        "wide_deep": {
+            "deep_dims": [128, 64],
+            "dropout_rate": 0.2,
+        },
+        
+        # Deep & Cross Classifier
+        "deep_cross": {
+            "num_cross_layers": 3,
+            "deep_dims": [128, 64],
+            "dropout_rate": 0.2,
+        },
     },
     
-    # DeepCross Model
-    "deep_cross": {
-        "hidden_layers": [128, 64],
-        "num_cross_layers": 3,
-        "dropout_rate": 0.2,
-    },
-    
-    # Multitask Model
+    # Multi-Task Learning
     "multitask": {
-        "shared_layers": [128, 64],
-        "task_specific_layers": [32],
+        "shared_dims": [128, 64],
+        "regression_dims": [32],
+        "classification_dims": [32],
         "dropout_rate": 0.2,
+        "loss_weights": {
+            "regression": 1.0,
+            "classification": 1.0,
+        }
     }
 }
 
