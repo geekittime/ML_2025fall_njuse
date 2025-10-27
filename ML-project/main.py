@@ -61,7 +61,7 @@ def run_lab1_model(model_type: str, task: int, dataset: str):
         raise ValueError(f"Unknown task number: {task}. Must be 1 or 2")
 
 
-def run_lab2_model(model_type: str, task: int, dataset: str, use_extracted: bool = True):
+def run_lab2_model(model_type: str, task, dataset: str, use_extracted: bool = True):
     """
     Run a Lab2 (deep learning) model
     
@@ -83,7 +83,7 @@ def run_lab2_model(model_type: str, task: int, dataset: str, use_extracted: bool
         print(f"\nRunning Lab2 Task2: {model_type.upper()} on {dataset}")
         return main(model_type, dataset, use_extracted)
     
-    elif task == "multitask" or model_type == "multitask":
+    elif task == "multitask":
         # Multi-Task Learning
         from models.lab2.multitask import main
         print(f"\nRunning Lab2 Multi-Task Learning on {dataset}")
@@ -117,7 +117,7 @@ Examples:
   python main.py --lab 2 --model deep_cross --task 2 --dataset tensorflow
   
   # Lab2: Multi-Task Learning (both tasks together)
-  python main.py --lab 2 --model multitask --task 1 --dataset yii2
+  python main.py --lab 2 --model - --task 1 --dataset yii2
         """
     )
     
@@ -133,15 +133,14 @@ Examples:
         "--model",
         type=str,
         required=True,
-        help="Model type. Lab1: linear, polynomial, random_forest, logistic. Lab2: mlp, wide_deep, deep_cross, shared_bottom, mmoe, multitask"
+        help="Model type. Lab1: linear, polynomial, random_forest, logistic. Lab2: mlp, wide_deep, deep_cross, shared_bottom, mmoe"
     )
     
     parser.add_argument(
         "--task",
-        type=int,
         required=True,
-        choices=[1, 2],
-        help="Task number: 1 (Regression - TTC Prediction) or 2 (Classification - Merge Prediction)"
+        choices=[1, 2, "multitask"],
+        help="Task number: 1 (Regression - TTC Prediction), 2 (Classification - Merge Prediction) or multitask (Lab2 only)"
     )
     
     parser.add_argument(
