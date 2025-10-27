@@ -4,6 +4,13 @@
 
 Lab2 实现了多种深度学习模型用于 Pull Request 分析：
 
+### 完成情况
+Level 1：完成
+
+Level 2：特征工程、跨项目评估
+
+Level 3：多任务网络，完成
+
 ### 任务说明
 
 1. **Task 1 (回归)**: 预测 PR 关闭时长 (Time-to-Close)
