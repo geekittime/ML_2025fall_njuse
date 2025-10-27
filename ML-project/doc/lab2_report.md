@@ -1,4 +1,4 @@
-# Lab2 深度学习模型使用指南
+# Lab2 综述
 
 ## 概述
 
@@ -17,6 +17,24 @@ Lab2 实现了多种深度学习模型用于 Pull Request 分析：
 3. **Multi-Task Learning**: 同时预测两个任务
    - 共享底层特征表示
    - 同时优化两个任务的损失
+
+### 使用特征
+默认情况下使用预处理特征，由`utils/feature_extract.py`（用于实验给出的数据集）或`utils/crawled_feature_extract.py`（用于使用`utils/repo_crawler.py`爬取得到的数据）处理得到。
+
+预处理特征继承自Lab1，为手动筛选的一组简单特征，包括PR的修改行数、文件数、最后一条评论时间、PR作者的所有PR被合并的比例等，特征数尽可能少以提高模型的泛用性。
+
+在没有预处理特征的情况下，自动合并所有文件内的内容作为特征。
+
+此外，模型在使用数据之前，还会进行一些简单的处理，如对时间相关的特征进行log1p变换、滤除缺省值等，并按PR创建时间以一定比例（默认4:1）切分训练与测试数据。
+
+## 分工
+陈哲敏 231250123：特征工程、部分代码与文档编写
+
+王彬宇 231250166：模型代码编写
+
+何棋 231250083：代码重构工作、部分文档编写
+
+刘柏成 231250098：部分文档编写
 
 ## 支持的模型架构
 
@@ -45,6 +63,13 @@ Lab2 实现了多种深度学习模型用于 Pull Request 分析：
 | **MultiTask** | 同时预测 TTC 和 Merge 状态 |
 
 ## 快速开始
+
+### 0. 环境
+要求Python 3.9+，并使用以下命令安装依赖：
+
+```powershell
+pip install -r requirements.txt
+```
 
 ### 1. Task 1: 回归任务
 
@@ -97,12 +122,14 @@ python main.py --lab 2 --model mlp --task 2 --dataset yii2
 python main.py --lab 2 --model deep_cross --task 2 --dataset tensorflow
 
 # Multi-Task
-python main.py --lab 2 --model multitask --task 1 --dataset yii2
+python main.py --lab 2 --model - --task multitask --dataset yii2
 ```
 
 ## 跨项目预测实验
 
 评估模型的泛化能力，训练在一个项目上，测试在另一个项目上。
+
+支持选择特定两个项目进行跨项目测试，也可以批量运行所有的跨项目组合，评估整体效果。
 
 ### 单个跨项目实验
 
@@ -175,69 +202,97 @@ LAB2_CONFIG = {
 - Dropout 比率
 - 多任务学习的损失权重
 
-## 输出说明
+## 实验结果
 
-### Task 1 (回归) 输出
+### Task 1 (回归)(MLP模型，yii2)
 
 ```
 =====================================================================
 Task 1: MLP for PR Time-to-Close Prediction
 =====================================================================
 ...
+============================================================
 Deep Learning Model Evaluation Results (Regression)
 ============================================================
-Mean Absolute Error (MAE): 45.23 hours (1.88 days)
-Root Mean Squared Error (RMSE): 67.89 hours (2.83 days)
-R² Score: 0.6543 (65.43%)
+Mean Absolute Error (MAE): 48.30 hours (2.01 days)
+Root Mean Squared Error (RMSE): 121.09 hours (5.05 days)
+R² Score: 0.4496 (44.96%)
 ============================================================
 ```
 
-### Task 2 (分类) 输出
+### Task 2 (分类)(MLP模型，yii2)
 
 ```
 =====================================================================
 Task 2: MLP for PR Merge Status Prediction
 =====================================================================
 ...
+======================================================================
 Task 2: Classification Model Evaluation Results
 ======================================================================
-Accuracy: 0.8234 (82.34%)
-Precision (Macro): 0.7891
-Recall (Macro): 0.7654
-F1 Score (Macro): 0.7765
+Accuracy: 0.8744 (87.44%)
+Precision (Macro): 0.8342
+Recall (Macro): 0.7795
+F1 Score (Macro): 0.8016
 
 Confusion Matrix:
-[[150  20]
- [ 15 135]]
+[[ 214  137]
+ [  63 1178]]
 
 Detailed Classification Report:
               precision    recall  f1-score   support
-  Not Merged       0.91      0.88      0.89       170
-      Merged       0.87      0.90      0.89       150
-    accuracy                           0.89       320
-   macro avg       0.89      0.89      0.89       320
-weighted avg       0.89      0.89      0.89       320
+
+  Not Merged       0.77      0.61      0.68       351
+      Merged       0.90      0.95      0.92      1241
+
+    accuracy                           0.87      1592
+   macro avg       0.83      0.78      0.80      1592
+weighted avg       0.87      0.87      0.87      1592
+
 ======================================================================
 ```
 
-### Multi-Task 输出
+### Multi-Task (yii2)
 
 ```
+======================================================================
 Multi-Task Learning Evaluation Results
 ======================================================================
 
 【Task 1: Regression - TTC Prediction】
-  MAE:  43.15 hours (1.80 days)
-  RMSE: 65.22 hours (2.72 days)
-  R²:   0.6723
+  MAE:  73.53 hours (3.06 days)
+  RMSE: 164.01 hours (6.83 days)
+  R²:   0.0064
 
 【Task 2: Classification - Merge Prediction】
-  Accuracy:  0.8345 (83.45%)
-  Precision: 0.8012
-  Recall:    0.7889
-  F1 Score:  0.7945
+  Accuracy:  0.8999 (89.99%)
+  Precision: 0.9129
+  Recall:    0.7447
+  F1 Score:  0.7951
+
+  Confusion Matrix:
+[[ 131  132]
+ [  10 1146]]
+
+  Classification Report:
+              precision    recall  f1-score   support
+
+  Not Merged       0.93      0.50      0.65       263
+      Merged       0.90      0.99      0.94      1156
+
+    accuracy                           0.90      1419
+   macro avg       0.91      0.74      0.80      1419
+weighted avg       0.90      0.90      0.89      1419
+
 ======================================================================
 ```
+
+结果显示，多任务网络在任务1上表现不良，但在任务2上表现仍然出色
+
+### Cross Project
+一份涉及5个项目的任务1跨项目测试结果已经在项目根目录下。
+
+从结果来看，模型一般有一定的泛化能力，可以在不同的项目下得到可观的表现，但不是对于所有项目都如此。
 
 ## 模型检查点
 
@@ -283,74 +338,3 @@ python models/lab2/task2.py --model mlp --dataset yii2
 python models/lab2/task2.py --model wide_deep --dataset yii2
 python models/lab2/task2.py --model deep_cross --dataset yii2
 ```
-
-## 实验设计建议
-
-### 1. 模型对比实验
-- 在同一数据集上训练所有模型
-- 比较性能指标
-- 分析各模型的优缺点
-
-### 2. 跨项目泛化实验
-- 使用 `cross_project.py` 进行跨项目预测
-- 评估模型在不同项目上的泛化能力
-- 分析哪些模型泛化性更好
-
-### 3. 多任务学习效果分析
-- 比较单任务模型 vs 多任务模型
-- 分析共享表示是否有助于提升性能
-- 调整损失权重观察影响
-
-### 4. 超参数调优
-- 修改 `config.py` 中的超参数
-- 比较不同网络结构的效果
-- 调整学习率、batch size 等
-
-## 故障排除
-
-### GPU 内存不足
-
-如果遇到 CUDA out of memory 错误：
-
-```python
-# 在 config.py 中减小 batch_size
-"training": {
-    "batch_size": 32,  # 从 64 改为 32
-    ...
-}
-```
-
-### 模型不收敛
-
-1. 降低学习率
-2. 增加训练轮数
-3. 检查数据预处理
-4. 尝试不同的网络结构
-
-### 数据加载错误
-
-确保数据文件存在：
-```
-data/yii2/PR_extracted_features.xlsx
-```
-
-如果没有预提取特征，使用：
-```powershell
-python models/lab2/task1.py --model mlp --dataset yii2 --no-extracted
-```
-
-## 总结
-
-Lab2 提供了完整的深度学习解决方案：
-- ✅ 多种先进的神经网络架构
-- ✅ Task 1 (回归) 和 Task 2 (分类)
-- ✅ 多任务学习
-- ✅ 跨项目预测实验
-- ✅ 完整的评价指标
-- ✅ 灵活的配置系统
-
-通过这些工具，你可以：
-1. 训练和评估多种模型
-2. 进行跨项目泛化性实验
-3. 探索多任务学习的优势
-4. 比较不同架构的性能

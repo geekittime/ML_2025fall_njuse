@@ -220,7 +220,7 @@ def main(model_type="mlp", task="regression", train_dataset=None, test_dataset=N
     
     if full_matrix:
         # Run full matrix
-        available_datasets = ["yii2"]  # Add more as you have data
+        available_datasets = ["yii2", "django", "react", "tensorflow", "terraform"]  # Add more as you have data
         experiment.run_full_matrix(available_datasets)
     elif train_dataset and test_dataset:
         # Run single experiment
