@@ -5,4 +5,4 @@ ML-lab2/lab2_data/*/
 /ML-lab1/.idea/
 
 .idea/
-.zip/
+*.zip
